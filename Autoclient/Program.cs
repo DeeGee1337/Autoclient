@@ -202,37 +202,37 @@ namespace Autoleague
         //Functions
         private static void Check_League_Client_started()
         {
-            Console.WriteLine("[CLIENT] Check_League_Client_started called");
-            Console.WriteLine("[CLIENT] Entering while true... ");
+            //Console.WriteLine("[CLIENT] Check_League_Client_started called");
+            //Console.WriteLine("[CLIENT] Entering while true... ");
 
             while (true)
             {
                 //get client process
-                Console.WriteLine("[CLIENT] Waiting for League client...");
+                //Console.WriteLine("[CLIENT] Waiting for League client...");
                 Process client = Process.GetProcessesByName("LeagueClientUx").FirstOrDefault();
 
                 //nullptr check
                 if (client != null)
                 {
-                    Console.WriteLine("[CLIENT] ProcessID: " + client.Id);
+                    //Console.WriteLine("[CLIENT] ProcessID: " + client.Id);
                     League_client_auth = Auth_with_LUC_api(client);
                     buffer = true;
                     League_client_is_open = true;
 
                     if (LUC_Process_id != client.Id)
                     {
-                        Console.WriteLine("[CLIENT] ProcessID check");
+                        //Console.WriteLine("[CLIENT] ProcessID check");
                         LUC_Process_id = client.Id;
 
                         if (Auto_accept)
                         {
-                            Console.WriteLine("[CLIENT] Auto_accept = true");
+                            //Console.WriteLine("[CLIENT] Auto_accept = true");
                             Auto_accept = true;
                         }
 
                         if (Auto_ban)
                         {
-
+                            Auto_ban = true;
                         }
                     }
                     //else
@@ -242,7 +242,7 @@ namespace Autoleague
 
                         //Console.WriteLine("[CLIENT] League client waiting...");
                     //}
-                    Thread.Sleep(2000);
+                    Thread.Sleep(10000);
                 }
             }
         }
@@ -387,12 +387,27 @@ namespace Autoleague
 
                         if (Game_phase == "Lobby")
                         {
+                            Thread.Sleep(2000);
                             continue;
                         }
                         if (Game_phase == "Matchmaking")
                         {
+                            Thread.Sleep(1000);
                             continue;
                         }
+
+                        if (Game_phase == "InProgress")
+                                Thread.Sleep(9000);
+
+                        if (Game_phase == "WaitingForStats")
+                                Thread.Sleep(9000);
+
+                        if (Game_phase == "PreEndOfGame")
+                                Thread.Sleep(9000);
+
+                        if (Game_phase == "EndOfGame")
+                                Thread.Sleep(5000);
+
                         if (Game_phase == "ReadyCheck")
                         {
                             if (Auto_accept)
