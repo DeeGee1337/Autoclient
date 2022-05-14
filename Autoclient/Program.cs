@@ -26,13 +26,28 @@ namespace Autoleague
         public static bool Auto_accept = true;
         public static bool Auto_ban = true;
         public static bool Auto_pick = true;
-        public static int currentChamp = (int)Champions.Brand;
-        public static int currentBan = (int)Champions.Annie;
+        public static int currentChamp = (int)Champions.Kaisa;
+        public static int currentBan = (int)Champions.Samira;
+        public static bool multiclient = true;
+        public static bool rankchanger = true;
+        public static bool chatexploit = true;
 
         //champselect
         public static string Chatroom_last = "";
         public static string act_ID_last = "";
         public static long act_ID_last_StartTime;
+
+        //rankchanger
+        public static bool rank_buffer = false;
+
+        //chatexploit
+        public static bool chat_exp_buffer = false;
+
+        //multiclient
+        public static bool client_buffer = false;
+
+        //welcome buffer
+        public static bool welcome_buffer = false;
 
         //ChampsEnum
         enum Champions
@@ -200,7 +215,23 @@ namespace Autoleague
         };
 
         //Functions
-        private static void Check_League_Client_started()
+        //private static void multiclient_spawn()
+        //{
+        //    Thread.Sleep(5000);
+
+        //    while (true)
+        //    {
+        //        string[] path = make_client_api_request(League_client_auth, "GET", "'/data-store/v1/install-dir", "");
+        //        Console.Write("[MULTICLIENT]: ");
+                
+        //        foreach (var value in path)
+        //        {
+        //            Console.WriteLine(value);
+        //        }
+        //    }
+        //}
+
+            private static void Check_League_Client_started()
         {
             //Console.WriteLine("[CLIENT] Check_League_Client_started called");
             //Console.WriteLine("[CLIENT] Entering while true... ");
@@ -249,11 +280,11 @@ namespace Autoleague
 
         private static string[] Auth_with_LUC_api(Process process_input)
         {
-            Console.WriteLine("[AUTH] Auth_with_LUC_api called");
+            //Console.WriteLine("[AUTH] Auth_with_LUC_api called");
 
             //cmdmeme
             Process cmd = new Process();
-            Console.WriteLine("[AUTH] Starting CMD.exe..");
+            //Console.WriteLine("[AUTH] Starting CMD.exe..");
             cmd.StartInfo.FileName = "cmd.exe";
             cmd.StartInfo.RedirectStandardInput = true;
             cmd.StartInfo.RedirectStandardOutput = true;
@@ -273,22 +304,22 @@ namespace Autoleague
             //bsp: "D:/Riot Games/League of Legends/LeagueClientUx.exe" "--riotclient-auth-token=osq5jjvbzioaIm62dURmpw" "--riotclient-app-port=63296" "--no-rads" "--disable-self-update" "--region=EUW" "--locale=en_GB" "--remoting-auth-token=C4DHVvrVUsKqvLrYJFZIgg" "--respawn-command=LeagueClient.exe" "--respawn-display-name=League of Legends" "--app-port=63359" "--install-directory=D:\Riot Games\League of Legends" "--app-name=LeagueClient" "--ux-name=LeagueClientUx" "--ux-helper-name=LeagueClientUxHelper" "--log-dir=LeagueClient Logs" "--crash-reporting=crashpad" "--crash-environment=EUW1" "--crash-pipe=\\.\pipe\crashpad_5432_HZRJBWVRTIBKLLYP" "--app-log-file-path=D:/Riot Games/League of Legends/Logs/LeagueClient Logs/2022-05-02T18-51-26_5432_LeagueClient.log" "--app-pid=5432" "--output-base-dir=D:\Riot Games\League of Legends" "--no-proxy-server"
             string CMD_output = cmd.StandardOutput.ReadToEnd();
             //Console.WriteLine("[AUTH] API CALL:" + CMD_output);
-            Console.WriteLine("[AUTH] Parsing Output..");
+            //Console.WriteLine("[AUTH] Parsing Output..");
 
             string Client_port = CMD_output.Split("--app-port=")[1].Split('"')[0];
-            Console.WriteLine("[AUTH] Client Port:" + Client_port);
+            //Console.WriteLine("[AUTH] Client Port:" + Client_port);
 
             string Client_key = CMD_output.Split("--remoting-auth-token=")[1].Split('"')[0];
-            Console.WriteLine("[AUTH] Client Port:" + Client_key);
+            //Console.WriteLine("[AUTH] Client Port:" + Client_key);
 
             //Get_key
             string Auth_for_rito = "riot:" + Client_key;
 
             var Auth_plain_text = System.Text.Encoding.UTF8.GetBytes(Auth_for_rito);
-            Console.WriteLine("[AUTH] Encoding in Plaintext..");
+            //Console.WriteLine("[AUTH] Encoding in Plaintext..");
 
             string Auth_Base64 = System.Convert.ToBase64String(Auth_plain_text);
-            Console.WriteLine("[AUTH] Auth_Base64:" + Auth_Base64);
+            //Console.WriteLine("[AUTH] Auth_Base64:" + Auth_Base64);
 
             //Return
             string[] output = { Auth_Base64, Client_port };
@@ -364,12 +395,28 @@ namespace Autoleague
 
         }
 
+        public static string getBetween(string strSource, string strStart, string strEnd)
+        {
+            if (strSource.Contains(strStart) && strSource.Contains(strEnd))
+            {
+                int Start, End;
+                Start = strSource.IndexOf(strStart, 0) + strStart.Length;
+                End = strSource.IndexOf(strEnd, Start);
+                return strSource.Substring(Start, End - Start);
+            }
+
+            return "";
+        }
+
         private static void Accept_Game()
         {
-            Console.WriteLine("[ACCEPT] INIT 3 Sec...");
+            Console.WriteLine("INIT 3 Sec...");
             Thread.Sleep(3000);
+            Console.Clear();
 
-            while(true)
+
+
+            while (true)
             {
                 if(true)
                 {
@@ -378,15 +425,160 @@ namespace Autoleague
                     string[] Game_session = make_client_api_request(League_client_auth, "GET", "lol-gameflow/v1/session", "");
                     //Console.WriteLine("[ACCEPT] Session: recieved");
 
+                    if (welcome_buffer == false)
+                    {
+                        string[] welcome = make_client_api_request(League_client_auth, "GET", "lol-summoner/v1/current-summoner", "");
+
+                        if (welcome[0] == "200")
+                        {
+                            string start = "displayName" + '"' + ":" + '"';
+                            string end = '"' + "," + '"' + "internalName";
+                            string final = getBetween(welcome[1], start, end);
+                            Console.WriteLine("[WELCOME] " + final);
+
+                            if (multiclient)
+                                Console.WriteLine("MULTICLIENTS ENABLED!");
+
+                            if (rankchanger)
+                                Console.WriteLine("RANKCHANGER  ENABLED!");
+
+                            if (Auto_accept)
+                                Console.WriteLine("AUTOACCEPT   ENABLED!");
+
+                            if (Auto_ban)
+                                Console.WriteLine("AUTOBAN      ENABLED! ChampID:" + currentBan);
+
+                            if (Auto_pick)
+                                Console.WriteLine("AUTOPICK     ENABLED! ChampID:" + currentChamp);
+
+                            if (chatexploit)
+                                Console.WriteLine("CHATEXPLOIT  ENABLED!");
+
+                            welcome_buffer = true;
+                        }     
+                    }
+
+                    if (chatexploit && chat_exp_buffer == false)
+                    {
+                        //{ "lol":{ "rankedLeagueQueue":"RANKED_SOLO_5x5","rankedLeagueTier":"CHALLENGER","rankedLeagueDivision":"I"} }
+                        //{"lol":{"rankedLeagueQueue": queue, "regalia":"{\"bannerType\":1,\"crestType\":2}","rankedSplitRewardLevel":"3","rankedLeagueTier": elo,"rankedLeagueDivision": division.upper()}})
+
+                        Console.Write("[CHATEXPLOIT] Trying to crash chat... \n");
+                        string[] changed = make_client_api_request(League_client_auth, "GET", "lol-summoner/v1/summoners?name={}", "");
+
+                        //foreach (var value in changed)
+                        //{
+                        //    Console.WriteLine(value);
+                        //}
+
+                        for (int i = 0; i < 5; i++)
+                        {
+                            string[] lol = make_client_api_request(League_client_auth, "POST", "lol-chat/v1/conversations/{}/messages", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            
+                            if (lol[0] != "404")
+                            {
+                                //foreach (var value in lol)
+                                //{
+                                //    Console.WriteLine(value);
+                                //    Console.WriteLine("||");
+                                //}
+
+                                Console.WriteLine("[CHATEXPLOIT] Successfully!");
+                                chat_exp_buffer = true;
+                            }                        
+                        }
+
+                    }
+
+
+                    if (multiclient && client_buffer == false)
+                    {
+                        string[] path = make_client_api_request(League_client_auth, "GET", "data-store/v1/install-dir", "");
+                        Console.Write("[MULTICLIENT]: ");
+
+                        foreach (var value in path)
+                        {
+                            Console.WriteLine(value);
+                            Console.WriteLine("||");
+                        }
+
+                        //cmdmeme
+                        Process cmd = new Process();
+                        Console.WriteLine("[MULTICLIENT] Starting CMD.exe..");
+                        cmd.StartInfo.FileName = "cmd.exe";
+                        cmd.StartInfo.RedirectStandardInput = true;
+                        cmd.StartInfo.RedirectStandardOutput = true;
+                        cmd.StartInfo.CreateNoWindow = true;
+                        cmd.StartInfo.UseShellExecute = false;
+                        cmd.Start();
+
+                        // Console.WriteLine(path[1] + "start LeagueClient.exe --allow-multiple-clients");
+                        //riot api codenz
+                        //On Windows this command looks like this: wmic PROCESS WHERE name='LeagueClientUx.exe' GET commandline and here's the Mac counterpart: ps -A | grep LeagueClientUx
+                        cmd.StandardInput.WriteLine("D:");
+                        cmd.StandardInput.WriteLine("cd D:\\Riot Games\\League of Legends");
+                        //cmd.StandardInput.WriteLine("cd " + path[1]);
+                        cmd.StandardInput.WriteLine("start LeagueClient.exe --allow-multiple-clients");
+                        cmd.StandardInput.Flush();
+                        cmd.StandardInput.Close();
+                        cmd.WaitForExit();
+
+                        client_buffer = true;
+                        //Process.Start("@" + path + "start LeagueClient.exe --allow-multiple-clients");
+                    }
+
+                    if (rankchanger && rank_buffer == false)
+                    {
+                        Console.Write("[RANKCHANGER] Trying to change rank... \n");
+                        string[] changed = make_client_api_request(League_client_auth, "GET", "lol-chat/v1/me", "");
+
+                        //foreach (var value in changed)
+                        //{
+                        //    Console.WriteLine(value);
+                        //}
+
+                        //200{ "availability":"chat","gameName":"HelenKathar","gameTag":"EUW","icon":907,"id":"3780fcce-8bac-5f5c-896c-d7e824dd8578@eu1.pvp.net","lastSeenOnlineTimestamp":null,"lol":{ "championId":"","companionId":"1","damageSkinId":"1","gameMode":"PRACTICETOOL","gameQueueType":"NONE","gameStatus":"hosting_Custom","iconOverride":"","initRankStat":"0","isObservable":"ALL","level":"30","mapId":"","mapSkinId":"1","masteryScore":"2","puuid":"3780fcce-8bac-5f5c-896c-d7e824dd8578","regalia":"{\"bannerType\":2,\"crestType\":1,\"selectedPrestigeCrest\":0}","skinVariant":"","skinname":""},"name":"HelenKathar","patchline":"live","pid":"3780fcce-8bac-5f5c-896c-d7e824dd8578@eu1.pvp.net","platformId":"EUW1","product":"league_of_legends","productName":"","puuid":"3780fcce-8bac-5f5c-896c-d7e824dd8578","statusMessage":"","summary":"","summonerId":2866662242010336,"time":0}
+
+                        if (changed[0] == "200")
+                        {
+                            string body = "{" + '"' + "lol" + '"' + ":{" + '"' + "rankedLeagueQueue" + '"' + ":" + '"' + "RANKED_SOLO_5x5" + '"' + "," + '"' + "rankedLeagueTier" + '"' + ":" + '"' + "CHALLENGER" + '"' + "," + '"' + "rankedLeagueDivision" + '"' + ":" + '"' + "I" + '"' + "}}";
+                            //Console.WriteLine("[RANKCHANGER] Print Body: \n");
+                            //Console.WriteLine(body);
+                            make_client_api_request(League_client_auth, "PUT", "lol-chat/v1/me", body);
+
+                            string[] changed2 = make_client_api_request(League_client_auth, "GET", "lol-chat/v1/me", "");
+                            //Console.Write("[RANKCHANGER]: AFTER REQUEST \n");
+
+                            //foreach (var value in changed)
+                            //{
+                            //    Console.WriteLine(value);
+                            //}
+                            Console.WriteLine("[RANKCHANGER] DONE!");
+                            rank_buffer = true;
+                        }
+                    }
+
                     //Session found
                     if (Game_session[0] == "200")
                     {
                         //Gamestate
                         string Game_phase = Game_session[1].Split("phase").Last().Split('"')[2];
-                        Console.WriteLine("[ACCEPT] State: " + Game_phase);
+                        //Console.WriteLine("[ACCEPT] State: " + Game_phase);
 
                         if (Game_phase == "Lobby")
                         {
+                            //if (true)
+                            //{
+                            //    string[] changed2 = make_client_api_request(League_client_auth, "GET", "lol-summoner/v1/summoners?name={HelenKathar}", "");
+
+                            //    Console.Write("[Chat Exploit]: ");
+                            //    foreach (var value in changed2)
+                            //    {
+                            //        Console.WriteLine(value);
+                            //    }
+
+                            //}
+
                             Thread.Sleep(2000);
                             continue;
                         }
@@ -578,7 +770,6 @@ namespace Autoleague
         {
             Console.SetWindowSize(120, 30);
             Console.Title = "DeeGee's Autoclient";
-            Console.WriteLine("Hello DeeGee!");
 
             //Threads here ->
             var Thread_league_is_alive = new Task(Check_League_Client_started);
@@ -587,8 +778,11 @@ namespace Autoleague
             var accept_game = new Task(Accept_Game);
             accept_game.Start();
 
+            //var multiclient_start = new Task(multiclient_spawn);
+            //multiclient_start.Start();
+
             //wait
-            var tasks = new[] { accept_game, Thread_league_is_alive };
+            var tasks = new[] { accept_game, Thread_league_is_alive , /*multiclient_start*/ };
             Task.WaitAll(tasks);
 
             Console.WriteLine("[MAIN] Tasks finished!");
